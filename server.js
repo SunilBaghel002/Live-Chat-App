@@ -34,7 +34,8 @@ const io = socketIo(server);
 
 // Serve static files from the 'public' directory
 // app.use(express.static("public"));
-app.use(express.static(path.join(__dirname, "public")));
+// app.use(express.static(path.join(__dirname, "public")));
+app.set("public", path.join(__dirname, "public"));
 app.get("/", (req, res) =>
   res.sendFile(path.join(__dirname, "/public/index.html"))
 );
