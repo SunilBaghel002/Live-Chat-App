@@ -33,7 +33,8 @@ const server = http.createServer(app);
 const io = socketIo(server);
 
 // Serve static files from the 'public' directory
-app.use(express.static("public"));
+// app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
 
 io.on("connection", (socket) => {
     console.log("New user connected");
