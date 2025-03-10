@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Modern Chat Platform</title>
+    <style>
+      /* Reset & Base Styles */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #f5f5f5;
+        overflow: hidden;
+      }
+      /* Hide containers initially */
+      #login-container,
+      #chat-container {
+        display: none;
+      }
+      .active {
+        display: block;
+      }
+
+      /* Login Screen */
+      #login-container {
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #007bff;
+      }
+      #login-box {
+        background: #fff;
+        padding: 20px 30px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        width: 90%;
+        max-width: 320px;
+      }
+      #login-box input {
+        width: 90%;
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      #login-box button {
+        width: 95%;
+        padding: 10px;
+        background: #28a745;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+      }
+      #login-box button:hover {
+        background: #218838;
+      }
+
+      /* Chat Screen */
+      #chat-container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+      }
+      header {
+        background: #007bff;
+        color: #fff;
+        padding: 15px;
+        text-align: center;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      header h2 {
+        margin-bottom: 5px;
+      }
+      header p {
+        font-size: 0.9em;
+      }
+      /* Texture selector styling */
+      #texture-selector {
+        margin-left: 10px;
+        font-size: 1rem;
+        padding: 5px;
+        border-radius: 4px;
+      }
+      #chat-box {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        /* Default background texture */
+        background: url('https://www.transparenttextures.com/patterns/black-linen.png');
+      }
+      .message {
+        margin-bottom: 15px;
+        display: flex;
+        flex-direction: column;
+        max-width: fit-content;
+        word-wrap: break-word;
+      }
+      /* Styles for your own messages */
+      .message.self {
+        align-self: flex-end;
+        display: flex;
+        align-items: flex-end;
+        flex-direction: column;
+        position: relative;
+        right: 0;
+        text-align: right;
+      }
+      .message.self .content {
+        background: #dcf8c6;
+        color: #333;
+      }
+      /* Styles for others' messages */
+      .message.other {
+        align-self: flex-start;
+        text-align: left;
+      }
+      .message.other .content {
+        background: #f1f0f0;
+        color: #333;
+      }
+      .meta {
+        font-size: 0.75em;
+        color: #777;
+        margin-bottom: 5px;
+      }
+      .content {
+        padding: 10px;
+        border-radius: 5px;
+        width: fit-content;
+        text-align: right;
+      }
+      /* Media (image/video) styling in chat */
+      .content img,
+      .content video {
+        width: 300px;
+        height: 300px;
+        object-fit: cover;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      /* Message input area */
+      #input-area {
+        display: flex;
+        align-items: center;
+        border-top: 1px solid #ccc;
+        padding: 10px;
+        background: #eee;
+      }
+      #message-input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 1rem;
+      }
+      #send-button {
+        padding: 10px 20px;
+        margin-left: 10px;
+        background: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+      }
+      #send-button:hover {
+        background: #0056b3;
+      }
+      /* Plus icon for media upload */
+      #upload-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        margin-right: 10px;
+        cursor: pointer;
+        color: #007bff;
+      }
+      /* Hidden file input */
+      #file-input {
+        display: none;
+      }
+      /* Responsive Styles */
+      @media (max-width: 600px) {
+        header,
+        #input-area {
+          padding: 10px;
+        }
+        #login-box {
+          width: 95%;
+        }
+      }
+
+      /* Full-screen media overlay */
+      #media-overlay {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        align-items: center;
+        justify-content: center;
+      }
+      #media-overlay.active {
+        display: flex;
+      }
+      #media-overlay img,
+      #media-overlay video {
+        max-width: 90%;
+        max-height: 90%;
+        object-fit: contain;
+      }
+      /* Close button for overlay */
+      #overlay-close {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        font-size: 2rem;
+        color: #fff;
+        cursor: pointer;
+        background: rgba(0, 0, 0, 0.5);
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Login Container -->
+    <div id="login-container" class="active">
+      <div id="login-box">
+        <h2>Welcome to Modern Chat!</h2>
+        <input type="text" id="username" placeholder="Enter your username" />
+        <button id="login-btn">Login</button>
+      </div>
+    </div>
+
+    <!-- Chat Container -->
+    <div id="chat-container">
+      <header>
+        <div>
+          <h2>Live Discussion Forum</h2>
+          <p id="display-username"></p>
+        </div>
+        <!-- Texture selector -->
+        <select id="texture-selector">
+          <option value="https://www.transparenttextures.com/patterns/cubes.png">Cubes</option>
+          <option value="https://www.transparenttextures.com/patterns/asfalt-light.png">Asfalt</option>
+          <option value="https://www.transparenttextures.com/patterns/diagmonds.png">Diamonds</option>
+          <option value="none">None</option>
+        </select>
+      </header>
+      <div id="chat-box"></div>
+      <div id="input-area">
+        <!-- Plus icon for file upload -->
+        <button id="upload-btn" title="Upload Media">＋</button>
+        <!-- Hidden file input -->
+        <input type="file" id="file-input" accept="image/*,video/*,audio/*" />
+        <input type="text" id="message-input" placeholder="Type your message..." autocomplete="off" />
+        <button id="send-button">Send</button>
+      </div>
+    </div>
+
+    <!-- Full-screen Media Overlay -->
+    <div id="media-overlay">
+      <button id="overlay-close" title="Close">&times;</button>
+      <!-- Media element will be injected here -->
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+
+      // DOM elements
+      const loginContainer = document.getElementById("login-container");
+      const chatContainer = document.getElementById("chat-container");
+      const loginBtn = document.getElementById("login-btn");
+      const usernameInput = document.getElementById("username");
+      const displayUsername = document.getElementById("display-username");
+      const chatBox = document.getElementById("chat-box");
+      const messageInput = document.getElementById("message-input");
+      const sendButton = document.getElementById("send-button");
+      const uploadBtn = document.getElementById("upload-btn");
+      const fileInput = document.getElementById("file-input");
+      const textureSelector = document.getElementById("texture-selector");
+      const mediaOverlay = document.getElementById("media-overlay");
+      const overlayClose = document.getElementById("overlay-close");
+
+      let username = "";
+
+      // Handle login
+      loginBtn.addEventListener("click", () => {
+        const enteredName = usernameInput.value.trim();
+        if (enteredName !== "") {
+          username = enteredName;
+          displayUsername.textContent = "Logged in as: " + username;
+          loginContainer.style.display = "none";
+          chatContainer.style.display = "flex";
+        }
+      });
+
+      // Send message on Enter key press
+      messageInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && !event.shiftKey) {
+          event.preventDefault();
+          sendMessage();
+        }
+      });
+
+      // Handle send button click
+      sendButton.addEventListener("click", (e) => {
+        e.preventDefault();
+        sendMessage();
+      });
+
+      // Function to send text message
+      function sendMessage() {
+        const msg = messageInput.value.trim();
+        if (msg !== "") {
+          const data = {
+            username: username,
+            message: msg,
+            timestamp: new Date().toLocaleString(),
+            type: "text"
+          };
+          socket.emit("newMessage", data);
+          messageInput.value = "";
+        }
+      }
+
+      // Handle file uploads when plus icon is clicked
+      uploadBtn.addEventListener("click", () => {
+        fileInput.click();
+      });
+
+      // Process selected file(s)
+      fileInput.addEventListener("change", () => {
+        const file = fileInput.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function (event) {
+            const fileData = event.target.result; // base64 data URL
+            const data = {
+              username: username,
+              timestamp: new Date().toLocaleString(),
+              type: "file",
+              fileType: file.type,
+              fileData: fileData,
+              message: ""
+            };
+            socket.emit("newMessage", data);
+          };
+          reader.readAsDataURL(file);
+        }
+        fileInput.value = "";
+      });
+
+      // Listen for new messages
+      socket.on("newMessage", (data) => {
+        const messageElement = document.createElement("div");
+        messageElement.classList.add("message");
+        if (data.username === username) {
+          messageElement.classList.add("self");
+        } else {
+          messageElement.classList.add("other");
+        }
+        const metaElement = document.createElement("div");
+        metaElement.classList.add("meta");
+        metaElement.textContent = data.username + " • " + data.timestamp;
+
+        const contentElement = document.createElement("div");
+        contentElement.classList.add("content");
+
+        if (data.type === "text") {
+          contentElement.textContent = data.message;
+        } else if (data.type === "file") {
+          if (data.fileType.startsWith("image")) {
+            const img = document.createElement("img");
+            img.src = data.fileData;
+            img.alt = "Uploaded Image";
+            // Add event listener to open overlay
+            img.addEventListener("click", () => {
+              openMediaOverlay("image", data.fileData);
+            });
+            contentElement.appendChild(img);
+          } else if (data.fileType.startsWith("video")) {
+            const video = document.createElement("video");
+            video.src = data.fileData;
+            video.controls = true;
+            video.style.width = "300px";
+            video.style.height = "300px";
+            video.style.objectFit = "cover";
+            // Add event listener to open overlay
+            video.addEventListener("click", () => {
+              openMediaOverlay("video", data.fileData);
+            });
+            contentElement.appendChild(video);
+          } else if (data.fileType.startsWith("audio")) {
+            const audio = document.createElement("audio");
+            audio.src = data.fileData;
+            audio.controls = true;
+            contentElement.appendChild(audio);
+          } else {
+            contentElement.textContent = "Unsupported file type.";
+          }
+        }
+
+        messageElement.appendChild(metaElement);
+        messageElement.appendChild(contentElement);
+        chatBox.appendChild(messageElement);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      });
+
+      // Function to open media overlay with full-screen media
+      function openMediaOverlay(type, src) {
+        // Clear previous content in overlay
+        mediaOverlay.innerHTML = "";
+        // Append close button (re-add event listener)
+        const closeBtn = document.createElement("button");
+        closeBtn.id = "overlay-close";
+        closeBtn.title = "Close";
+        closeBtn.innerHTML = "&times;";
+        closeBtn.addEventListener("click", closeMediaOverlay);
+        mediaOverlay.appendChild(closeBtn);
+        if (type === "image") {
+          const img = document.createElement("img");
+          img.src = src;
+          img.alt = "Full-size Image";
+          mediaOverlay.appendChild(img);
+        } else if (type === "video") {
+          const video = document.createElement("video");
+          video.src = src;
+          video.controls = true;
+          video.autoplay = true;
+          mediaOverlay.appendChild(video);
+        }
+        mediaOverlay.classList.add("active");
+      }
+
+      // Function to close media overlay
+      function closeMediaOverlay() {
+        mediaOverlay.classList.remove("active");
+      }
+
+      // Change background texture based on selection
+      textureSelector.addEventListener("change", () => {
+        const texture = textureSelector.value;
+        if (texture === "none") {
+          chatBox.style.background = "#fff";
+        } else {
+          chatBox.style.background = `url('${texture}')`;
+        }
+      });
+    </script>
+  </body>
+</html>
